@@ -8,17 +8,16 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(app, model_class=Base)
-db.init_app()
 
 
-class Utilisateur(db.model):
+class Utilisateur(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    nom = db.Column(db.String, nullable=False)
+    nom = db.Column(db.String(254), nullable=False)
     dateNaissance = db.Column(db.Date, nullable=False)
-    email = db.Column(db.String, nullable=True)
-    numeroTelephone = db.Column(db.String, nullable=True)
-    province = db.Column(db.String, nullable=False)
-    commune = db.Column(db.String, nullable=False)
+    email = db.Column(db.String(254), nullable=True)
+    numeroTelephone = db.Column(db.String(254), nullable=True)
+    province = db.Column(db.String(254), nullable=False)
+    commune = db.Column(db.String(254), nullable=False)
 
     def to_dict(self):
         return {
