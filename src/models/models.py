@@ -1,4 +1,4 @@
-from .init import app
+from .init import app, logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from flask_migrate import Migrate
@@ -8,8 +8,14 @@ class Base(DeclarativeBase):
     pass
 
 
-db = SQLAlchemy(app, model_class=Base)
-migrate = Migrate(app, db)
+try:
+    db = SQLAlchemy(app, model_class=Base)
+    logger.info("Connected to database")
+    migrate = Migrate(app, db)
+    logger.info("Applied migrations...")
+except Exception as e:
+    logger.error(f"Error encountered when connecting to database: {e}")
+    raise e
 
 
 class Utilisateur(db.Model):

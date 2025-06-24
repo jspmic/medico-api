@@ -17,7 +17,10 @@ DB_NAME = os.getenv("DB_NAME")
 # Logging setup
 
 logger = logging.getLogger(__name__)
-logging.basicConfig("log.log", encoding="utf-8", level=logging.DEBUG)
+logging.basicConfig(filename="log.log", encoding="utf-8",
+                    datefmt="%Y/%m/%d %I:%M:%S %p",
+                    format="%(levelname)s:%(asctime)s:%(message)s",
+                    level=logging.DEBUG)
 
 # App setup
 
