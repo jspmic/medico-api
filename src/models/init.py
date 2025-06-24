@@ -13,6 +13,7 @@ HOST = os.getenv("HOST")
 USER = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Logging setup
 
@@ -29,3 +30,4 @@ api = Api(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = \
         f"mysql://{USER}:{PASSWORD}@{HOST}/{DB_NAME}"
+app.config["SECRET_KEY"] = SECRET_KEY
