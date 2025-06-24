@@ -24,10 +24,5 @@ logging.basicConfig("log.log", encoding="utf-8", level=logging.DEBUG)
 app = Flask(__name__)
 api = Api(app)
 
-try:
-    app.config["SQLALCHEMY_DATABASE_URI"] = \
-            f"mysql://{USER}:{PASSWORD}@{HOST}/{DB_NAME}"
-    logger.info("Connected to database")
-except Exception as e:
-    logger.error(f"Encountered error when connecting to database: {e}")
-    raise e
+app.config["SQLALCHEMY_DATABASE_URI"] = \
+        f"mysql://{USER}:{PASSWORD}@{HOST}/{DB_NAME}"
