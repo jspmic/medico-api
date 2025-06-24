@@ -1,6 +1,7 @@
 from .init import app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from flask_migrate import Migrate
 
 
 class Base(DeclarativeBase):
@@ -8,6 +9,7 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(app, model_class=Base)
+migrate = Migrate(app, db)
 
 
 class Utilisateur(db.Model):
