@@ -22,10 +22,11 @@ class Utilisateur(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nom = db.Column(db.String(254), nullable=False)
     dateNaissance = db.Column(db.Date, nullable=False)
-    email = db.Column(db.String(254), nullable=True)
-    numeroTelephone = db.Column(db.String(254), nullable=True)
+    email = db.Column(db.String(254), nullable=False)
+    numeroTelephone = db.Column(db.String(254), nullable=False)
     province = db.Column(db.String(254), nullable=False)
     commune = db.Column(db.String(254), nullable=False)
+    password = db.Column(db.String(65), nullable=False)
 
     def to_dict(self):
         return {
