@@ -37,4 +37,5 @@ class Utilisateur(db.Model):
                 "numeroTelephone": self.numeroTelephone,
                 "province": self.province,
                 "commune": self.commune,
+                "password": self.password
                 }
