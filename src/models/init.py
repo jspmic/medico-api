@@ -31,6 +31,6 @@ app = Flask(__name__)
 api = Api(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = \
-        f"mysql://{USER}:{PASSWORD}@{HOST}/{DB_NAME}"
+        f"mysql+mysqldb://{USER}:{PASSWORD}@{HOST}/{DB_NAME}"
 app.config["JWT_SECRET_KEY"] = SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = EXPIRES
