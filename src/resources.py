@@ -1,10 +1,14 @@
 from flask import jsonify, Response
-from flask_restful import Resource, abort, request, marshal_with
+from flask_restful import Resource, abort, request, marshal_with, \
+        HTTPException
 from marshmallow import Schema, fields
 
 from .models.models import app, db, Utilisateur
 from .models.init import logger
 from .functions import hash_password
+
+from tenacity import retry, wait_exponential, \
+        stop_after_attempt, retry_if_not_exception_type
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -48,6 +52,11 @@ class UtilisateurGETOutputSchema(Schema):  # Similar to UtilisateurPOST schema
 # Resources definition
 
 class UtilisateurResource(Resource):
+    @retry(
+        retry=retry_if_not_exception_type((HTTPException)),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
+        stop=stop_after_attempt(3)
+    )
     def get(self):
         try:
             user = UtilisateurGETInputSchema().load(request.args)
@@ -98,6 +107,11 @@ class UtilisateurResource(Resource):
         else:
             abort(403, message="Access denied")
 
+    @retry(
+        retry=retry_if_not_exception_type((HTTPException)),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
+        stop=stop_after_attempt(3)
+    )
     def post(self):
         try:
             user = UtilisateurPOSTSchema().load(request.json)
