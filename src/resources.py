@@ -38,6 +38,7 @@ class UtilisateurGETInputSchema(Schema):
 
 
 class UtilisateurGETOutputSchema(Schema):  # Similar to UtilisateurPOST schema
+    id = fields.Integer(required=True)
     nom = fields.Str(required=True)
     sexe = fields.Str(required=True)
     dateNaissance = fields.Date(required=True)
