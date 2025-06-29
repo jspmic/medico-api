@@ -19,6 +19,7 @@ except Exception as e:
 
 
 class Utilisateur(db.Model):
+    __tablename__ = "utilisateur"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nom = db.Column(db.String(254), nullable=False)
     dateNaissance = db.Column(db.Date, nullable=False)
