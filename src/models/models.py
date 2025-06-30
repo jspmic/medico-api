@@ -48,13 +48,36 @@ class Utilisateur(db.Model):
                 }
 
 
+class ServiceHopital(db.Model):
+    __tablename__ = "service_hopital"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'))
+    hopital_id = db.Column(db.Integer, db.ForeignKey('hopital.id'))
+
+
 class Service(db.Model):
     __tablename__ = "service"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nom = db.Column(db.String(60), unique=True, nullable=False)
     description = db.Column(db.String(254), nullable=True)
+    service = db.relationship('Hopital', secondary=ServiceHopital.__table__,
+                              back_populates='service')
 
     def to_dict(self):
         return {
                 self.nom: self.description
+                }
+
+
+class Hopital(db.Model):
+    __tablename__ = "hopital"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(100), unique=True, nullable=False)
+    adresse = db.Column(db.String(100), nullable=True)
+    service = db.relationship('Service', secondary=ServiceHopital.__table__,
+                              back_populates='hopital')
+
+    def to_dict(self):
+        return {
+                self.nom: self.adresse
                 }
