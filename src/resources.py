@@ -3,7 +3,7 @@ from flask_restful import Resource, abort, request, marshal_with, \
         HTTPException
 from marshmallow import Schema, fields
 
-from .models.models import app, db, Utilisateur
+from .models.models import app, db, Utilisateur, Service
 from .models.init import logger
 from .functions import hash_password
 
@@ -48,6 +48,17 @@ class UtilisateurGETOutputSchema(Schema):  # Similar to UtilisateurPOST schema
     commune = fields.Str(required=True)
     password = fields.Str(required=True)
     access_token = fields.Str(required=True)
+    services = fields.Dict(keys=fields.Str(), values=fields.Str())
+
+
+class ServicesPOSTSchema(Schema):
+    nom = fields.Str(required=True)
+    description = fields.Str(required=True)
+
+
+class ServicesGETSchema(Schema):
+    services = fields.Dict(keys=fields.Str(),
+                           values=fields.Str())
 
 
 # Resources definition
@@ -88,12 +99,19 @@ class UtilisateurResource(Resource):
                 numeroTelephone=numeroTelephone,
                 password=password).first()
 
+        query_services: list[Service] = Service.query.all()
+        services: dict = {}
+        if query_services:
+            for service in query_services:
+                services.update(service.to_dict())
+
         if existing_user_email:
             access_token = create_access_token(identity=existing_user_email.get_identity(),
                                                expires_delta=None)
             logger.info(f"Generated access token: {access_token}")
-            result = UtilisateurGETOutputSchema().dumps(
-                    existing_user_email.to_dict(access_token))
+            _result = existing_user_email.to_dict(access_token)
+            _result['services'] = services
+            result = UtilisateurGETOutputSchema().dumps(_result)
             logger.info("User gave email and was granted access")
             return result, 200
         elif existing_user_numeroTelephone:
@@ -101,8 +119,9 @@ class UtilisateurResource(Resource):
                     identity=existing_user_numeroTelephone.get_identity(),
                     expires_delta=None)
             logger.info(f"Generated access token: {access_token}")
-            result = UtilisateurGETOutputSchema().dumps(
-                    existing_user_numeroTelephone.to_dict(access_token))
+            _result = existing_user_numeroTelephone.to_dict(access_token)
+            _result['services'] = services
+            result = UtilisateurGETOutputSchema().dumps(_result)
             logger.info("User gave numeroTelephone and was granted access")
             return result, 200
         else:
@@ -159,6 +178,34 @@ class UtilisateurResource(Resource):
         db.session.commit()
         logger.info("Added user successfully")
         return {"message": "User created successfully"}, 201
+
+
+class Services(Resource):
+    def get(self):
+        query_services: list[Service] = Service.query.all()
+        services: dict = {}
+        if query_services:
+            for service in query_services:
+                services.update(service.to_dict())
+
+        dumped = ServicesGETSchema().dump({"services": services})
+        return dumped, 200
+
+    def post(self):
+        try:
+            service = ServicesPOSTSchema().load(request.json)
+        except Exception as e:
+            logger.error(f"Error when loading service using POST schema %s: {e}",
+                         "(POST /services)")
+            abort(404, message="Service not provided correctly")
+
+        new_service = Service(nom=service['nom'],
+                              description=service['description'])
+
+        db.session.add(new_service)
+        db.session.commit()
+        logger.info(f"Added service '{new_service.to_dict()}' successfully")
+        return {"message": "Service inserted successfully"}, 201
 
 
 class Test(Resource):
