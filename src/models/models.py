@@ -46,3 +46,15 @@ class Utilisateur(db.Model):
                 "password": self.password,
                 "access_token": access_token
                 }
+
+
+class Service(db.Model):
+    __tablename__ = "service"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(60), unique=True, nullable=False)
+    description = db.Column(db.String(254), nullable=True)
+
+    def to_dict(self):
+        return {
+                self.nom: self.description
+                }
