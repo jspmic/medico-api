@@ -19,12 +19,13 @@ except Exception as e:
 
 
 class Utilisateur(db.Model):
+    __tablename__ = "utilisateur"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nom = db.Column(db.String(254), nullable=False)
     dateNaissance = db.Column(db.Date, nullable=False)
     sexe = db.Column(db.String(1), nullable=False)
-    email = db.Column(db.String(254), nullable=True)
-    numeroTelephone = db.Column(db.String(254), nullable=True)
+    email = db.Column(db.String(254), nullable=True, unique=True)
+    numeroTelephone = db.Column(db.String(254), nullable=True, unique=True)
     province = db.Column(db.String(254), nullable=False)
     commune = db.Column(db.String(254), nullable=False)
     password = db.Column(db.String(65), nullable=False)
@@ -44,4 +45,39 @@ class Utilisateur(db.Model):
                 "commune": self.commune,
                 "password": self.password,
                 "access_token": access_token
+                }
+
+
+service_hopital = db.Table('service_hopital',
+                           db.Column('service_id',
+                                     db.Integer, db.ForeignKey('service.id')),
+                           db.Column('hopital_id',
+                                     db.Integer, db.ForeignKey('hopital.id'))
+                           )
+
+
+class Service(db.Model):
+    __tablename__ = "service"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(60), unique=True, nullable=False)
+    description = db.Column(db.String(254), nullable=True)
+
+    def to_dict(self):
+        return {
+                self.nom: self.description
+                }
+
+
+class Hopital(db.Model):
+    __tablename__ = "hopital"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(100), unique=True, nullable=False)
+    adresse = db.Column(db.String(100), nullable=True)
+    services = db.relationship('Service', secondary=service_hopital,
+                               backref='hopitaux'
+                               )
+
+    def to_dict(self):
+        return {
+                self.nom: self.adresse
                 }
