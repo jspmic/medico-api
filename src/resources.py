@@ -197,7 +197,6 @@ class Hopitals(Resource):
             services: list[str] = list(map(
                 lambda x: x.nom.capitalize(), _services))
             hopitaux_services.update({hopital.nom: services})
-        logger.debug(hopitaux_services)
         dumped = HopitalGETOutputSchema().dump({"hopitaux": hopitaux_services})
         return dumped, 200
 
@@ -215,7 +214,6 @@ class Hopitals(Resource):
                     "(POST /hopital)")
             abort(404, message="Hopital not provided correctly")
 
-        logger.info(hopital)
         adresse = hopital.get('adresse', None)
         try:
             new_hopital = Hopital(nom=hopital['nom'],
