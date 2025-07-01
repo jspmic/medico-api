@@ -228,6 +228,7 @@ class Hopitals(Resource):
 
         services: list[str] = hopital['services']
         for _service in services:
+            _service = _service.strip()
             service: Service
             try:
                 service = db.session.execute(db.select(Service).filter_by(
