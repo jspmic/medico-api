@@ -83,6 +83,9 @@ class RDVPOSTSchema(Schema):
     service = fields.Str(required=True)
     reference_id = fields.Integer()
 
+    def handle_error(self, exc, data, **kwargs):
+        logger.error(exc.messages)
+
 
 # Resources definition
 
