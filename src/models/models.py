@@ -81,3 +81,32 @@ class Hopital(db.Model):
         return {
                 self.nom: self.adresse
                 }
+
+
+utilisateur_service_hopital = db.Table('utilisateur_service_hopital',
+                                       db.Column('utilisateur_id',
+                                                 db.Integer,
+                                                 db.ForeignKey(
+                                                     'utilisateur.id'
+                                                     )),
+                                       db.Column('service_id',
+                                                 db.Integer,
+                                                 db.ForeignKey('service.id')),
+                                       db.Column('hopital_id',
+                                                 db.Integer,
+                                                 db.ForeignKey('hopital.id'))
+                                       )
+
+
+class RDV(db.Model):
+    __tablename__ = "rdv"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(254), nullable=False)
+    sexe = db.Column(db.String(1), nullable=False)
+    dateTime = db.Column(db.DateTime, nullable=False)
+    hopital = db.relationship('Hopital',
+                              secondary=utilisateur_service_hopital)
+    service = db.relationship('Service',
+                              secondary=utilisateur_service_hopital)
+    reference = db.relationship('Utilisateur',
+                                secondary=utilisateur_service_hopital)
