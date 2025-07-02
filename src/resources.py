@@ -303,19 +303,12 @@ class RDVs(Resource):
         stop=stop_after_attempt(3)
     )
     def post(self):
+        logger.debug(request.json)
         try:
             rdv = RDVPOSTSchema().load(request.json)
         except Exception as e:
             logger.error(
-                    f"Error when loading rdv using first POST schema %s: {e}",
-                    "(POST /rdv)")
-
-        try:
-            logger.info("Attempting to use second POST schema for RDV")
-            rdv = RDVPOST2Schema().load(request.json)
-        except Exception as e:
-            logger.error(
-                    f"Error when loading rdv using second POST schema %s: {e}",
+                    f"Error when loading rdv POST schema %s: {e}",
                     "(POST /rdv)")
             return {"message": "Invalid request"}, 404
 
