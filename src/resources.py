@@ -4,7 +4,7 @@ from flask_restful import Resource, abort, request, marshal_with, \
 from marshmallow import Schema, fields
 
 from .models.models import app, db, Utilisateur, Hopital, \
-        Service, service_hopital
+        Service, service_hopital, RDV
 from .models.init import logger
 from .functions import hash_password
 
@@ -61,6 +61,27 @@ class HopitalPOSTSchema(Schema):
 class HopitalGETOutputSchema(Schema):
     hopitaux = fields.Dict(keys=fields.Str(),
                            values=fields.List(fields.Str()))
+
+
+class RDVGETOutputSchema(Schema):
+    output = fields.List(
+            fields.Dict(
+                keys=fields.Str(),
+                values=fields.Raw()
+            )
+        )
+
+
+class RDVPOSTSchema(Schema):
+    nom = fields.Str(required=True)
+    sexe = fields.Str(required=True)
+    contact = fields.Str()
+    province = fields.Str()
+    commune = fields.Str()
+    dateTime = fields.DateTime(required=True)
+    hopital = fields.Str(required=True)
+    service = fields.Str(required=True)
+    reference_id = fields.Integer()
 
 
 # Resources definition
@@ -244,6 +265,87 @@ class Hopitals(Resource):
         db.session.commit()
         logger.info(f"Added hopital '{new_hopital.to_dict()}' successfully")
         return {"message": "Hopital inserted successfully"}, 201
+
+
+class RDVs(Resource):
+    @retry(
+        retry=retry_if_not_exception_type((HTTPException)),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
+        stop=stop_after_attempt(3)
+    )
+    def get(self):
+        id_user = request.args.get("id_user", "")
+        if id_user == "":
+            return {"message": "Invalid request"}, 404
+        id_user = int(id_user)
+        user = Utilisateur.query.filter_by(id=id_user).first()
+        rdv_for_user: list[RDV] = user.rdv
+        response: list[dict] = []
+        for _rdv in rdv_for_user:
+            response.append(_rdv.to_dict())
+
+        json_response = RDVGETOutputSchema().dumps({"output": response})
+        return json_response, 200
+
+    @retry(
+        retry=retry_if_not_exception_type((HTTPException)),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
+        stop=stop_after_attempt(3)
+    )
+    def post(self):
+        try:
+            rdv = RDVPOSTSchema().load(request.json)
+        except Exception as e:
+            logger.error(
+                    f"Error when loading rdv using POST schema %s: {e}",
+                    "(POST /rdv)")
+            abort(404, message="RDV not provided correctly")
+
+        contact = rdv.get("contact", None)
+        province = rdv.get("province", None)
+        commune = rdv.get("commune", None)
+        _rdv = RDV(nom=rdv['nom'],
+                   sexe=rdv['sexe'],
+                   contact=contact,
+                   province=province,
+                   commune=commune,
+                   dateTime=rdv['dateTime'],
+                   )
+        db.session.add(_rdv)
+
+        # Searching for the corresponding Hospital
+        _hopital = rdv['hopital']
+        hospital = Hopital.query.filter_by(
+                nom=_hopital).first()
+        if not hospital:
+            logger.error(f"Hopital {_hopital} not found in DB - POST /rdv")
+            return {"message": f"Hopital {_hopital} not found"}, 404
+
+        # Searching for the corresponding Service
+        _service = rdv['service']
+        service = Service.query.filter_by(
+                nom=_service).first()
+        if not service:
+            logger.error(f"Service {_service} not found in DB - POST /rdv")
+            return {"message": f"Service {_service} not found"}, 404
+
+        # Searching for the corresponding Utilisateur
+        _userID = rdv['reference_id']
+        user = Utilisateur.query.filter_by(
+                id=_userID).first()
+        if not user:
+            logger.error(f"User of id {_userID} not found in DB - POST /rdv")
+            return {"message": f"User {_userID} not found"}, 404
+
+        db.session.commit()  # Writing the changes to add the RDV
+        _rdv.reference = user
+        _rdv.hopital = hospital
+        _rdv.service = service
+
+        db.session.commit()  # Writing the changes to the foreign keys
+        logger.info(f"Inserted RDV successfully {_rdv.to_dict()}")
+
+        return {"message": "Inserted successfully"}, 201
 
 
 class Test(Resource):

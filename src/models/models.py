@@ -1,6 +1,7 @@
 from .init import app, logger
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from datetime import datetime
 from flask_migrate import Migrate
 
 
@@ -29,6 +30,8 @@ class Utilisateur(db.Model):
     province = db.Column(db.String(254), nullable=False)
     commune = db.Column(db.String(254), nullable=False)
     password = db.Column(db.String(65), nullable=False)
+    rdv = db.relationship('RDV',
+                          backref='reference')
 
     def get_identity(self):
         return self.nom
@@ -61,6 +64,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nom = db.Column(db.String(60), unique=True, nullable=False)
     description = db.Column(db.String(254), nullable=True)
+    rdv = db.relationship('RDV', backref='service')
 
     def to_dict(self):
         return {
@@ -76,8 +80,52 @@ class Hopital(db.Model):
     services = db.relationship('Service', secondary=service_hopital,
                                backref='hopitaux'
                                )
+    rdv = db.relationship('RDV', backref='hopital')
 
     def to_dict(self):
         return {
                 self.nom: self.adresse
+                }
+
+
+utilisateur_rdv = db.Table('utilisateur_service_hopital',
+                           db.Column('utilisateur_id',
+                                     db.Integer,
+                                     db.ForeignKey(
+                                         'utilisateur.id'
+                                         )),
+                           db.Column('rdv_id',
+                                     db.Integer,
+                                     db.ForeignKey(
+                                         'rdv.id'
+                                         )),
+                           )
+
+
+class RDV(db.Model):
+    __tablename__ = "rdv"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(254), nullable=False)
+    sexe = db.Column(db.String(1), nullable=False)
+    province = db.Column(db.String(254), nullable=True)
+    commune = db.Column(db.String(254), nullable=True)
+    contact = db.Column(db.String(254), nullable=True)
+    dateTime = db.Column(db.DateTime, nullable=False)
+    hopital_id = db.Column(db.Integer, db.ForeignKey('hopital.id'))
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'))
+    utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'))
+
+    def to_dict(self):
+        format = "%Y-%m-%d %H:%M:%S"
+        return {
+                "id": self.id,
+                "nom": self.nom,
+                "sexe": self.sexe,
+                "contact": self.contact,
+                "province": self.province,
+                "commune": self.commune,
+                "dateTime": datetime.strftime(self.dateTime, format),
+                "hopital": self.hopital.nom,
+                "reference_id": self.reference.id,
+                "service": self.service.nom
                 }
