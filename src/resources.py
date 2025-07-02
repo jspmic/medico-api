@@ -83,8 +83,15 @@ class RDVPOSTSchema(Schema):
     service = fields.Str(required=True)
     reference_id = fields.Integer()
 
-    def handle_error(self, exc, data, **kwargs):
-        logger.error(exc.messages)
+
+class RDVPOST2Schema(Schema):
+    nom = fields.Str(required=True)
+    sexe = fields.Str(required=True)
+    contact = fields.Str()
+    dateTime = fields.DateTime(required=True)
+    hopital = fields.Str(required=True)
+    service = fields.Str(required=True)
+    reference_id = fields.Integer()
 
 
 # Resources definition
@@ -300,9 +307,17 @@ class RDVs(Resource):
             rdv = RDVPOSTSchema().load(request.json)
         except Exception as e:
             logger.error(
-                    f"Error when loading rdv using POST schema %s: {e}",
+                    f"Error when loading rdv using first POST schema %s: {e}",
                     "(POST /rdv)")
-            abort(404, message="RDV not provided correctly")
+
+        try:
+            logger.info("Attempting to use second POST schema for RDV")
+            rdv = RDVPOST2Schema().load(request.json)
+        except Exception as e:
+            logger.error(
+                    f"Error when loading rdv using second POST schema %s: {e}",
+                    "(POST /rdv)")
+            return {"message": "Invalid request"}, 404
 
         contact = rdv.get("contact", None)
         province = rdv.get("province", None)
